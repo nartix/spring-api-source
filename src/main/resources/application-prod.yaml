@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${app.postgres.host}:${app.postgres.port:5432}/${app.postgres.database}
+    username: ${app.postgres.username}
+    password: ${app.postgres.password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+app:
+  security:
+    session:
+      secure: true
+    oauth2:
+      signing:
+        allow-generated-key: false
+
+management:
+  endpoint:
+    health:
+      show-details: never
+  health:
+    # Sessions use JDBC; there are no application Redis consumers. Do not make
+    # readiness depend on an unused starter's auto-configured localhost probe.
+    redis:
+      enabled: false
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+
+logging:
+  structured:
+    format:
+      console: logstash
+  level:
+    root: INFO
+    "[org.springframework]": INFO
+    "[com.ferozfaiz]": INFO

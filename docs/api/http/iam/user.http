@@ -1,0 +1,56 @@
+@host = http://localhost:8080
+@nextjsServerClientId = uniapi-nextjs-server
+
+### Get users read access token
+# Requires users:read or SCOPE_users:read.
+# @name usersReadToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api users:read
+
+### Get users write access token
+# Requires users:write or SCOPE_users:write.
+# @name usersWriteToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api users:write
+
+### Create user
+POST {{host}}/api/v1/users
+Content-Type: application/json
+Authorization: Bearer {{usersWriteToken.response.body.$.access_token}}
+
+{
+  "username": "Adam",
+  "email": "Adam@example.com",
+  "password": "secret123",
+  "firstName": "Adam",
+  "lastName": "D"
+}
+
+### List users
+GET {{host}}/api/v1/users
+Authorization: Bearer {{usersReadToken.response.body.$.access_token}}
+
+### List users with pagination and sorting
+GET {{host}}/api/v1/users?page=0&size=20&sort=createdAt,desc
+Authorization: Bearer {{usersReadToken.response.body.$.access_token}}
+
+### List users sorted by username, then newest
+GET {{host}}/api/v1/users?page=0&size=2&sort=username,asc&sort=createdAt,desc
+Authorization: Bearer {{usersReadToken.response.body.$.access_token}}
+
+### List users with invalid sort
+GET {{host}}/api/v1/users?sort=passwordHash,asc
+Authorization: Bearer {{usersReadToken.response.body.$.access_token}}
+
+### Get user by id
+@userId = 1
+GET {{host}}/api/v1/users/{{userId}}
+Authorization: Bearer {{usersReadToken.response.body.$.access_token}}

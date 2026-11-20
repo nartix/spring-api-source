@@ -1,0 +1,59 @@
+spring:
+  output:
+    ansi:
+      enabled: ALWAYS # Enable ANSI colors in the console output
+  devtools:
+    restart:
+      enabled: true # Enable automatic restart on code changes
+  datasource: # using postgresql
+    url: jdbc:postgresql://${app.postgres.host:localhost}:${app.postgres.port:5432}/${app.postgres.database:app}
+    username: ${app.postgres.username:app}
+    password: ${app.postgres.password:app}
+  jpa:
+    hibernate:
+      ddl-auto: validate # Validate the database schema
+    show-sql: false # Prefer logger-based SQL diagnostics over direct console output
+    properties:
+      hibernate:
+        "[format_sql]": true # Format SQL statements for better readability
+        "[use_sql_comments]": true # Add comments to SQL statements for better debugging
+  liquibase:
+    # default-schema: dev
+    # Uncomment the following line to drop the database before running migrations
+    drop-first: false
+
+server:
+  address: ${SERVER_ADDRESS:0.0.0.0}
+  port: ${SERVER_PORT:8080}
+
+# Quick level order (most verbose to least):
+# TRACE > DEBUG > INFO > WARN > ERROR.
+logging:
+  file:
+    name: ${UNIAPI_DEV_LOG_FILE:logs/uniapi-dev.log}
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+  level:
+    root: INFO # Set the default logging level to INFO
+    "[org.springframework]": INFO # Set the logging level for Spring Framework to DEBUG
+    "[com.ferozfaiz]": INFO # Set the logging level for your application package to DEBUG
+    "[org.hibernate.SQL]": WARN # Log SQL in dev through the logging system
+    "[org.hibernate.orm.jdbc.bind]": "OFF" # Log bind parameter values in dev
+    "[org.springframework.jdbc.core.JdbcTemplate]": WARN # Log SQL issued via JdbcTemplate / NamedParameterJdbcTemplate
+    "[org.springframework.jdbc.core.StatementCreatorUtils]": "OFF" # Log JdbcTemplate bind parameter values
+
+app:
+  security:
+    session:
+      secure: ${APP_SECURITY_SESSION_SECURE:false}
+      audit-hmac-secret: ${APP_SECURITY_SESSION_AUDIT_HMAC_SECRET:local-development-session-audit-hmac-secret}
+    oauth2:
+      signing:
+        allow-generated-key: ${APP_SECURITY_OAUTH2_SIGNING_ALLOW_GENERATED_KEY:true}
+      clients:
+        nextjs:
+          client-secret: ${APP_SECURITY_OAUTH2_NEXTJS_CLIENT_SECRET:local-development-nextjs-client-secret}
+        nextjs-server:
+          client-secret: ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_CLIENT_SECRET:local-development-nextjs-server-client-secret}

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  # Explicit module ordering avoids Liquibase includeAll path sorting issues
+  - includeAll:
+      path: changes/spring-session/spring-session
+      relativeToChangelogFile: true
+  - includeAll:
+      path: changes/spring-session/spring-session-attributes
+      relativeToChangelogFile: true
+  - includeAll:
+      path: changes/spring-modulith-events/
+      relativeToChangelogFile: true
+  - includeAll:
+      path: changes/oauth2
+      relativeToChangelogFile: true

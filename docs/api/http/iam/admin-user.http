@@ -1,0 +1,114 @@
+@host = http://localhost:8080
+
+### Get admin CSRF token
+# @name adminCsrf
+GET {{host}}/api/v1/admin/auth/csrf
+
+### Admin login
+# @prompt adminUsername Admin username or email
+# @prompt adminPassword Admin password
+POST {{host}}/api/v1/admin/auth/login
+Content-Type: application/x-www-form-urlencoded
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}
+
+username={{adminUsername}}&password={{adminPassword}}
+
+### Current admin session identity
+GET {{host}}/api/v1/admin/auth/me
+
+### List assignable admin user roles
+GET {{host}}/api/v1/admin/roles?page=0&size=100&sort=code,asc
+
+### Search assignable admin user roles
+GET {{host}}/api/v1/admin/roles?q=moderator&active=true&sort=name,asc
+
+### List assignable admin user permissions
+GET {{host}}/api/v1/admin/permissions?page=0&size=20&sort=resource,asc&sort=action,asc&sort=code,asc
+
+### Search assignable admin user permissions
+GET {{host}}/api/v1/admin/permissions?q=users&resource=admin-users&active=true&sort=code,asc
+
+### List assignable admin user permissions with invalid sort
+GET {{host}}/api/v1/admin/permissions?sort=passwordHash,asc
+
+### Create admin user
+POST {{host}}/api/v1/admin/users
+Content-Type: application/json
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}
+
+{
+  "username": "Casey",
+  "email": "Casey@example.com",
+  "password": "secret123",
+  "firstName": "Casey",
+  "lastName": "D",
+  "active": true,
+  "roles": ["ADMIN"],
+  "permissions": ["admin:users:read"]
+}
+
+### List admin users
+GET {{host}}/api/v1/admin/users
+
+### List admin users with pagination and sorting
+GET {{host}}/api/v1/admin/users?page=0&size=20&sort=updatedAt,desc&sort=id,asc
+
+### List admin users sorted by username, then newest update
+GET {{host}}/api/v1/admin/users?page=0&size=2&sort=username,asc&sort=updatedAt,desc&sort=id,asc
+
+### List admin users sorted by returned role values
+GET {{host}}/api/v1/admin/users?page=0&size=20&sort=roles,asc&sort=updatedAt,desc
+
+### Search admin users across returned fields
+GET {{host}}/api/v1/admin/users?search=feroz
+
+### List admin users filtered by fields and role
+GET {{host}}/api/v1/admin/users?username=feroz&active=true&roles=ADMIN&sort=updatedAt,desc
+
+### List admin users filtered by permission and date range
+GET {{host}}/api/v1/admin/users?permissions=admin:users:read&createdFrom=2026-05-01T00:00:00Z&createdTo=2026-06-01T00:00:00Z&sort=createdAt,desc
+
+### List admin users filtered by account state
+GET {{host}}/api/v1/admin/users?accountNonExpired=true&accountNonLocked=true&credentialsNonExpired=true&sort=lastLoginAt,desc
+
+### List admin users with invalid sort
+GET {{host}}/api/v1/admin/users?sort=passwordHash,asc
+
+### Get admin user by id
+@adminUserId = 1
+GET {{host}}/api/v1/admin/users/{{adminUserId}}
+
+### Update admin user
+PUT {{host}}/api/v1/admin/users/{{adminUserId}}
+Content-Type: application/json
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}
+
+{
+  "username": "Casey",
+  "email": "Casey@example.com",
+  "firstName": "Casey",
+  "lastName": "D",
+  "active": true,
+  "roles": ["ADMIN"],
+  "permissions": ["admin:users:read", "admin:users:status", "admin:users:write"]
+}
+
+### Update admin user account status
+PATCH {{host}}/api/v1/admin/users/{{adminUserId}}/status
+Content-Type: application/json
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}
+
+{
+  "active": false,
+  "accountNonExpired": true,
+  "accountNonLocked": false,
+  "credentialsNonExpired": true
+}
+
+### Delete admin user
+DELETE {{host}}/api/v1/admin/users/{{adminUserId}}
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}
+
+### Admin logout
+POST {{host}}/api/v1/admin/auth/logout
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}

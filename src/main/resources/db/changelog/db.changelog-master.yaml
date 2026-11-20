@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - include:
+      file: modules/iam/iam-changelog.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: modules/data/data-changelog.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: modules/catalogue/catalogue-changelog.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: modules/platform/platform-changelog.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: modules/audit/audit-changelog.yaml
+      relativeToChangelogFile: true

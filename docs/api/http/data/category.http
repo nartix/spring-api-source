@@ -1,0 +1,249 @@
+@host = http://localhost:8080
+@nextjsServerClientId = uniapi-nextjs-server
+
+### Get category read access token
+# Requires categories:read or SCOPE_categories:read.
+# @name categoryReadToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api categories:read
+
+### Get category write access token
+# Requires categories:write or SCOPE_categories:write.
+# @name categoryWriteToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api categories:write
+
+### Get category ranking capabilities
+GET {{host}}/api/v1/categories/capabilities
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Create root category
+# @name rootCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "slug": "finance",
+  "name": "Finance",
+  "description": "Finance-related data",
+  "active": true
+}
+
+### Create child category
+# @name childCategory
+# @prompt rootCategoryId Root category id
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{rootCategoryId}},
+  "slug": "reports",
+  "name": "Reports",
+  "description": "Financial reports",
+  "active": true
+}
+
+### Create ranked child category before an existing sibling
+# @prompt rootCategoryId Root category id
+# @prompt beforeCategoryId Existing sibling id
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{rootCategoryId}},
+  "beforeId": {{beforeCategoryId}},
+  "slug": "ranked-reports-before",
+  "name": "Ranked Reports Before",
+  "description": "Inserted before a sibling",
+  "active": true
+}
+
+### Create ranked child category at zero-based target index
+# @prompt rootCategoryId Root category id
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{rootCategoryId}},
+  "targetIndex": 0,
+  "slug": "ranked-reports-index",
+  "name": "Ranked Reports Index",
+  "description": "Inserted at the first sibling position",
+  "active": true
+}
+
+### List all categories flat
+# Response items include depth, where root categories have depth 0.
+GET {{host}}/api/v1/categories?page=0&size=20&sort=depth,asc&sort=name,asc
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### List all categories in tree display order
+GET {{host}}/api/v1/categories?page=0&size=20&sort=tree,asc&sort=name,asc
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### List categories in ranked tree order
+GET {{host}}/api/v1/categories?page=0&size=20&sort=tree,asc&sort=sortRank,asc&sort=id,asc
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Reject descending sortRank in ranked tree order
+# Expected: 400, message key data.api.category.list.sort.sort-rank.unsupported.
+GET {{host}}/api/v1/categories?page=0&size=20&sort=tree,asc&sort=sortRank,desc
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Reject mixed-parent sortRank sorting
+# Expected: 400, message key data.api.category.list.sort.sort-rank.unsupported.
+GET {{host}}/api/v1/categories?page=0&size=20&sort=sortRank,asc
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Reject invalid category sort shape
+# Expected: 400, message key data.api.category.list.sort.format.
+GET {{host}}/api/v1/categories?page=0&size=20&sort=name,asc,extra
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### List root categories
+GET {{host}}/api/v1/categories/roots
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Get category by id
+# Response includes depth, where root categories have depth 0.
+# @prompt categoryId Category id
+GET {{host}}/api/v1/categories/{{categoryId}}
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### List category tree
+GET {{host}}/api/v1/categories/tree
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Get category subtree
+# @prompt rootCategoryId Root category id
+GET {{host}}/api/v1/categories/{{rootCategoryId}}/tree
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### List category children
+# @prompt rootCategoryId Root category id
+GET {{host}}/api/v1/categories/{{rootCategoryId}}/children
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### List category ancestors
+# @prompt childCategoryId Child category id
+GET {{host}}/api/v1/categories/{{childCategoryId}}/ancestors
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### List category descendants
+# @prompt rootCategoryId Root category id
+GET {{host}}/api/v1/categories/{{rootCategoryId}}/descendants
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Update category
+# @prompt updateCategoryId Category id to update
+PUT {{host}}/api/v1/categories/{{updateCategoryId}}
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "slug": "monthly-reports",
+  "name": "Monthly Reports",
+  "description": "Monthly financial reports",
+  "active": true
+}
+
+### Patch category
+# @prompt patchCategoryId Category id to patch
+PATCH {{host}}/api/v1/categories/{{patchCategoryId}}
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "description": "Monthly reports and summaries"
+}
+
+### Move category
+# @prompt moveCategoryId Category id to move
+# @prompt moveParentId New parent id (use null to move to root)
+POST {{host}}/api/v1/categories/{{moveCategoryId}}/move
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{moveParentId}},
+  "mode": "LEAF_ONLY",
+  "targetIndex": 0
+}
+
+### Reorder category within current sibling group
+# @prompt reorderCategoryId Category id to reorder
+# @prompt afterCategoryId Existing sibling id
+POST {{host}}/api/v1/categories/{{reorderCategoryId}}/reorder
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "afterId": {{afterCategoryId}}
+}
+
+### Estimate subtree category move
+# @prompt moveCategoryId Category id to move
+# @prompt moveParentId New parent id (use null to move to root)
+POST {{host}}/api/v1/categories/{{moveCategoryId}}/move/estimate
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{moveParentId}},
+  "mode": "SUBTREE"
+}
+
+### Create category with invalid slug
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "slug": "Invalid Slug",
+  "name": "Invalid"
+}
+
+### Create category with invalid placement fields
+# Expected: 400, message key data.api.category.placement.conflict.
+# @prompt rootCategoryId Root category id
+# @prompt beforeCategoryId Existing sibling id
+# @prompt afterCategoryId Existing sibling id
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{rootCategoryId}},
+  "beforeId": {{beforeCategoryId}},
+  "afterId": {{afterCategoryId}},
+  "slug": "invalid-placement",
+  "name": "Invalid Placement"
+}
+
+### Disabled-ranking contract note
+# Do not run this against production data categories; production data categories are ranked.
+# Disabled ranking is covered by the unranked fixture/service tests. A disabled system rejects
+# beforeId, afterId, and targetIndex with HTTP 400 and message keys:
+# data.api.category.ranking.disabled.before-id,
+# data.api.category.ranking.disabled.after-id,
+# data.api.category.ranking.disabled.target-index.
+# Clients must use GET /api/v1/categories/capabilities as the ranking discovery signal, not
+# ordinary category response fields or failed write attempts. Oversized rebalance conflicts use
+# data.domain.category.ranking.rebalance-limit and return 409 without rank changes.
+
+### Delete category
+# @prompt deleteCategoryId Category id to delete
+DELETE {{host}}/api/v1/categories/{{deleteCategoryId}}
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}

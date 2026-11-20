@@ -1,0 +1,163 @@
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  config:
+    # Optional local overrides; this file is ignored by Git.
+    import: "optional:file:./application-local.properties"
+  application:
+    name: uniapi
+  messages:
+    basename: messages/platform,messages/shared,messages/iam,messages/session,messages/audit,messages/data,messages/catalogue,messages/category
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  liquibase:
+    enabled: ${SPRING_LIQUIBASE_ENABLED:true}
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    contexts:
+      - ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    vault:
+      enabled: ${SPRING_CLOUD_VAULT_ENABLED:false}
+  data:
+    rest:
+      base-path: /api/v1
+      default-page-size: 20
+      max-page-size: 100
+
+server:
+  forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:framework}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    root: INFO
+    "[com.ferozfaiz]": INFO
+
+uniapi:
+  category-systems:
+    data:
+      owning-module: data
+      node-table: data_category
+      closure-table: data_category_closure
+      ranking:
+        enabled: true
+        column-name: sort_rank
+        starting-rank: 1000000000
+        rank-step: 1000000000
+        max-sync-rebalance-rows: 1000
+        disabled-request-policy: REJECT
+        placement-modes:
+          - APPEND
+          - BEFORE_ID
+          - AFTER_ID
+          - TARGET_INDEX
+        sort-rank-exposed: true
+      fallback-order:
+        - property: name
+          column-name: name
+          direction: ASC
+        - property: id
+          column-name: id
+          direction: ASC
+    catalogue:
+      owning-module: catalogue
+      node-table: catalogue_category
+      closure-table: catalogue_category_closure
+      ranking:
+        enabled: true
+        column-name: sort_rank
+        starting-rank: 1000000000
+        rank-step: 1000000000
+        max-sync-rebalance-rows: 1000
+        disabled-request-policy: REJECT
+        placement-modes:
+          - APPEND
+          - BEFORE_ID
+          - AFTER_ID
+          - TARGET_INDEX
+        sort-rank-exposed: true
+      fallback-order:
+        - property: name
+          column-name: name
+          direction: ASC
+        - property: id
+          column-name: id
+          direction: ASC
+
+app:
+  category:
+    admin:
+      jdbc:
+        enabled-systems: []
+        systems: {}
+  catalogue:
+    list:
+      default-page-size: ${APP_CATALOGUE_LIST_DEFAULT_PAGE_SIZE:24}
+      max-page-size: ${APP_CATALOGUE_LIST_MAX_PAGE_SIZE:100}
+      max-sort-orders: ${APP_CATALOGUE_LIST_MAX_SORT_ORDERS:5}
+      default-marketplace: ${APP_CATALOGUE_LIST_DEFAULT_MARKETPLACE:CA}
+      max-search-length: ${APP_CATALOGUE_LIST_MAX_SEARCH_LENGTH:120}
+  data:
+    category:
+      list:
+        max-page-size: ${APP_DATA_CATEGORY_LIST_MAX_PAGE_SIZE:100}
+        enforce-max-page-size: ${APP_DATA_CATEGORY_LIST_ENFORCE_MAX_PAGE_SIZE:true}
+      hierarchy:
+        max-sync-move-affected-rows: ${APP_DATA_CATEGORY_HIERARCHY_MAX_SYNC_MOVE_AFFECTED_ROWS:100000}
+        max-sync-move-subtree-nodes: ${APP_DATA_CATEGORY_HIERARCHY_MAX_SYNC_MOVE_SUBTREE_NODES:10000}
+        max-depth: ${APP_DATA_CATEGORY_HIERARCHY_MAX_DEPTH:100}
+        max-sync-delete-subtree-nodes: ${APP_DATA_CATEGORY_HIERARCHY_MAX_SYNC_DELETE_SUBTREE_NODES:1}
+        max-tree-read-nodes: ${APP_DATA_CATEGORY_HIERARCHY_MAX_TREE_READ_NODES:10000}
+        sync-statement-timeout: ${APP_DATA_CATEGORY_HIERARCHY_SYNC_STATEMENT_TIMEOUT:25s}
+  security:
+    session:
+      user-cookie-name: ${APP_SECURITY_SESSION_USER_COOKIE_NAME:TGP_USER_SESSION}
+      user-cookie-path: ${APP_SECURITY_SESSION_USER_COOKIE_PATH:/}
+      user-csrf-cookie-name: ${APP_SECURITY_SESSION_USER_CSRF_COOKIE_NAME:TGP_USER_XSRF_TOKEN}
+      user-csrf-header-name: ${APP_SECURITY_SESSION_USER_CSRF_HEADER_NAME:X-TGP-USER-XSRF-TOKEN}
+      admin-cookie-name: ${APP_SECURITY_SESSION_ADMIN_COOKIE_NAME:TGP_ADMIN_SESSION}
+      admin-cookie-path: ${APP_SECURITY_SESSION_ADMIN_COOKIE_PATH:/api/v1/admin}
+      admin-csrf-cookie-name: ${APP_SECURITY_SESSION_ADMIN_CSRF_COOKIE_NAME:TGP_ADMIN_XSRF_TOKEN}
+      admin-csrf-header-name: ${APP_SECURITY_SESSION_ADMIN_CSRF_HEADER_NAME:X-TGP-ADMIN-XSRF-TOKEN}
+      same-site: ${APP_SECURITY_SESSION_SAME_SITE:Lax}
+      secure: ${APP_SECURITY_SESSION_SECURE:true}
+      audit-hmac-secret: ${APP_SECURITY_SESSION_AUDIT_HMAC_SECRET:}
+    oauth2:
+      issuer: ${APP_SECURITY_OAUTH2_ISSUER:http://localhost:8080}
+      audience: ${APP_SECURITY_OAUTH2_AUDIENCE:uniapi}
+      signing:
+        key-id: ${APP_SECURITY_OAUTH2_SIGNING_KEY_ID:local-dev}
+        public-key-pem: ${APP_SECURITY_OAUTH2_SIGNING_PUBLIC_KEY_PEM:}
+        private-key-pem: ${APP_SECURITY_OAUTH2_SIGNING_PRIVATE_KEY_PEM:}
+        allow-generated-key: ${APP_SECURITY_OAUTH2_SIGNING_ALLOW_GENERATED_KEY:false}
+      clients:
+        nextjs:
+          client-id: ${APP_SECURITY_OAUTH2_NEXTJS_CLIENT_ID:uniapi-nextjs}
+          client-secret: ${APP_SECURITY_OAUTH2_NEXTJS_CLIENT_SECRET:}
+          redirect-uris:
+            - ${APP_SECURITY_OAUTH2_NEXTJS_REDIRECT_URI:http://localhost:3000/api/auth/callback/uniapi}
+          post-logout-redirect-uris:
+            - ${APP_SECURITY_OAUTH2_NEXTJS_POST_LOGOUT_REDIRECT_URI:http://localhost:3000}
+        nextjs-server:
+          client-id: ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_CLIENT_ID:uniapi-nextjs-server}
+          client-secret: ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_CLIENT_SECRET:}
+          scopes:
+            - ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_SCOPE:api}
+            - ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_CATALOGUE_READ_SCOPE:catalogue:read}
+            - ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_CATALOGUE_WRITE_SCOPE:catalogue:write}
+            - ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_USERS_READ_SCOPE:users:read}
+            - ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_USERS_WRITE_SCOPE:users:write}
+            - ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_CATEGORIES_READ_SCOPE:categories:read}
+            - ${APP_SECURITY_OAUTH2_NEXTJS_SERVER_CATEGORIES_WRITE_SCOPE:categories:write}

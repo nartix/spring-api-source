@@ -1,0 +1,247 @@
+@host = http://localhost:8080
+@nextjsServerClientId = uniapi-nextjs-server
+
+### Get category read access token
+# Requires categories:read or SCOPE_categories:read.
+# @name categoryReadToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api categories:read
+
+### Get category write access token
+# Requires categories:write or SCOPE_categories:write.
+# @name categoryWriteToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api categories:write
+
+### Create level 0 root category
+# @name rootCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "slug": "knowledge-base",
+  "name": "Knowledge Base",
+  "description": "Root category for a multi-level category tree",
+  "active": true
+}
+
+### Create level 1 child A
+# @name operationsCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{rootCategory.response.body.$.id}},
+  "slug": "operations",
+  "name": "Operations",
+  "description": "Operational knowledge",
+  "active": true
+}
+
+### Create level 1 child B
+# @name financeCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{rootCategory.response.body.$.id}},
+  "slug": "finance",
+  "name": "Finance",
+  "description": "Financial knowledge",
+  "active": true
+}
+
+### Create level 2 child A1
+# @name incidentCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{operationsCategory.response.body.$.id}},
+  "slug": "incident-response",
+  "name": "Incident Response",
+  "description": "Incident response runbooks",
+  "active": true
+}
+
+### Create level 2 child A2
+# @name maintenanceCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{operationsCategory.response.body.$.id}},
+  "slug": "maintenance",
+  "name": "Maintenance",
+  "description": "Maintenance procedures",
+  "active": true
+}
+
+### Create level 2 child B1
+# @name budgetingCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{financeCategory.response.body.$.id}},
+  "slug": "budgeting",
+  "name": "Budgeting",
+  "description": "Budget planning and tracking",
+  "active": true
+}
+
+### Create level 2 child B2
+# @name reportingCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{financeCategory.response.body.$.id}},
+  "slug": "reporting",
+  "name": "Reporting",
+  "description": "Financial reporting",
+  "active": true
+}
+
+### Create level 3 child A1a
+# @name sevOneCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{incidentCategory.response.body.$.id}},
+  "slug": "sev-one",
+  "name": "SEV One",
+  "description": "Critical incident procedures",
+  "active": true
+}
+
+### Create level 3 child A1b
+# @name sevTwoCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{incidentCategory.response.body.$.id}},
+  "slug": "sev-two",
+  "name": "SEV Two",
+  "description": "Major incident procedures",
+  "active": true
+}
+
+### Create level 3 child A2a
+# @name scheduledMaintenanceCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{maintenanceCategory.response.body.$.id}},
+  "slug": "scheduled-maintenance",
+  "name": "Scheduled Maintenance",
+  "description": "Planned maintenance windows",
+  "active": true
+}
+
+### Create level 3 child A2b
+# @name emergencyMaintenanceCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{maintenanceCategory.response.body.$.id}},
+  "slug": "emergency-maintenance",
+  "name": "Emergency Maintenance",
+  "description": "Unplanned maintenance procedures",
+  "active": true
+}
+
+### Create level 3 child B1a
+# @name annualBudgetCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{budgetingCategory.response.body.$.id}},
+  "slug": "annual-budget",
+  "name": "Annual Budget",
+  "description": "Annual budget workflow",
+  "active": true
+}
+
+### Create level 3 child B1b
+# @name quarterlyForecastCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{budgetingCategory.response.body.$.id}},
+  "slug": "quarterly-forecast",
+  "name": "Quarterly Forecast",
+  "description": "Quarterly forecasting workflow",
+  "active": true
+}
+
+### Create level 3 child B2a
+# @name monthlyCloseCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{reportingCategory.response.body.$.id}},
+  "slug": "monthly-close",
+  "name": "Monthly Close",
+  "description": "Monthly close reporting",
+  "active": true
+}
+
+### Create level 3 child B2b
+# @name boardReportsCategory
+POST {{host}}/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{categoryWriteToken.response.body.$.access_token}}
+
+{
+  "parentId": {{reportingCategory.response.body.$.id}},
+  "slug": "board-reports",
+  "name": "Board Reports",
+  "description": "Board reporting packets",
+  "active": true
+}
+
+### List full category tree
+GET {{host}}/api/v1/categories/tree
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Get root category subtree
+GET {{host}}/api/v1/categories/{{rootCategory.response.body.$.id}}/tree
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Get operations subtree
+GET {{host}}/api/v1/categories/{{operationsCategory.response.body.$.id}}/tree
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}
+
+### Get finance subtree
+GET {{host}}/api/v1/categories/{{financeCategory.response.body.$.id}}/tree
+Authorization: Bearer {{categoryReadToken.response.body.$.access_token}}

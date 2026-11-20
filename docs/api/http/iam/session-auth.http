@@ -1,0 +1,61 @@
+### Get regular CSRF token
+# @name regularCsrf
+GET http://localhost:8080/api/v1/auth/csrf
+
+### Regular login
+# @prompt regularUsername Regular username or email (case-insensitive)
+# @prompt regularPassword Regular password
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/x-www-form-urlencoded
+X-TGP-USER-XSRF-TOKEN: {{regularCsrf.response.body.$.token}}
+
+username={{regularUsername}}&password={{regularPassword}}
+
+### Current regular session identity
+GET http://localhost:8080/api/v1/auth/me
+
+### Regular logout
+POST http://localhost:8080/api/v1/auth/logout
+X-TGP-USER-XSRF-TOKEN: {{regularCsrf.response.body.$.token}}
+
+### Get admin CSRF token
+# @name adminCsrf
+GET http://localhost:8080/api/v1/admin/auth/csrf
+
+### Admin or moderator login
+# @prompt adminUsername Admin or moderator username or email (case-insensitive)
+# @prompt adminPassword Admin or moderator password
+POST http://localhost:8080/api/v1/admin/auth/login
+Content-Type: application/x-www-form-urlencoded
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}
+
+username={{adminUsername}}&password={{adminPassword}}
+
+### Current admin session identity
+GET http://localhost:8080/api/v1/admin/auth/me
+
+### Admin authorization denied example
+GET http://localhost:8080/api/v1/admin/auth/me
+Cookie: TGP_USER_SESSION=regular-session-placeholder
+
+### Admin logout
+POST http://localhost:8080/api/v1/admin/auth/logout
+X-TGP-ADMIN-XSRF-TOKEN: {{adminCsrf.response.body.$.token}}
+
+### Coexistence: regular identity still uses the regular cookie
+GET http://localhost:8080/api/v1/auth/me
+
+### Coexistence: admin identity still uses the admin cookie
+GET http://localhost:8080/api/v1/admin/auth/me
+
+### Regular API with user session cookie
+GET http://localhost:8080/api/v1/users
+
+### Regular API with bearer token remains supported
+GET http://localhost:8080/api/v1/users
+Authorization: Bearer {{serverToken.response.body.$.access_token}}
+
+### Regular API credential conflict example
+GET http://localhost:8080/api/v1/users
+Authorization: Bearer jwt-for-a-different-user
+Cookie: TGP_USER_SESSION=user-session-placeholder

@@ -1,0 +1,399 @@
+### Get catalogue read access token
+# Requires catalogue:read or SCOPE_catalogue:read.
+# @name catalogueReadToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST http://localhost:8080/oauth2/token
+Authorization: Basic uniapi-nextjs-server {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api catalogue:read
+
+### Get catalogue write access token
+# Requires catalogue:write or SCOPE_catalogue:write.
+# @name catalogueWriteToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST http://localhost:8080/oauth2/token
+Authorization: Basic uniapi-nextjs-server {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api catalogue:write
+
+### List products
+GET http://localhost:8080/api/v1/products?page=0&size=24&sort=title,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### List products with multiple sorts and marketplace default
+GET http://localhost:8080/api/v1/products?page=0&size=24&marketplace=CA&sort=currentPrice,asc&sort=title,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### List products for a merchant store
+GET http://localhost:8080/api/v1/products?merchantStore=amazon-ca&hasCurrentPrice=true&sort=currentPrice,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### List storage products
+GET http://localhost:8080/api/v1/storage-products?capacityGbMin=1000&sort=capacityGb,desc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### List CPUs
+GET http://localhost:8080/api/v1/cpus?coreCountMin=8&sort=boostClockGhz,desc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### List graphics cards
+GET http://localhost:8080/api/v1/graphics-cards?vramGbMin=12&sort=currentPrice,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### List category products
+GET http://localhost:8080/api/v1/categories/storage/products?page=0&size=24&sort=title,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Public catalogue category ranking capabilities
+GET http://localhost:8080/api/v1/catalogue/categories/capabilities
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Public catalogue category sort contract note
+# The public catalogue surface does not expose a category sibling/tree list endpoint with category
+# sort parameters. /api/v1/categories/{slug}/products sorts products, not category siblings, so
+# category sortRank ordering is exposed through admin scoped lists and category write responses.
+
+### Get product detail
+GET http://localhost:8080/api/v1/products/1
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Get product detail by canonical slug
+GET http://localhost:8080/api/v1/products/1/sample-product
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Invalid listing size
+GET http://localhost:8080/api/v1/products?size=101
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Invalid listing sort
+GET http://localhost:8080/api/v1/products?sort=passwordHash,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Invalid product listing sortRank
+# Expected: 400, message key catalogue.api.list.sort.allowed; this is a product list, not a category sibling list.
+GET http://localhost:8080/api/v1/categories/storage/products?sort=sortRank,desc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Invalid family-specific filter
+GET http://localhost:8080/api/v1/storage-products?coreCountMin=8
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### List brands
+GET http://localhost:8080/api/v1/catalogue/brands?page=0&size=20&sort=name,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Get brand
+# @prompt catalogueBrandLookupId Existing catalogue brand id
+GET http://localhost:8080/api/v1/catalogue/brands/{{catalogueBrandLookupId}}
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Create brand
+# @name createBrand
+POST http://localhost:8080/api/v1/catalogue/brands
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Local Test Brand",
+  "slug": "local-test-brand",
+  "active": true
+}
+
+### Replace brand
+PUT http://localhost:8080/api/v1/catalogue/brands/{{createBrand.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Local Test Brand Updated",
+  "slug": "local-test-brand",
+  "active": true
+}
+
+### Patch brand
+PATCH http://localhost:8080/api/v1/catalogue/brands/{{createBrand.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/merge-patch+json
+
+{
+  "name": "Local Test Brand Patched"
+}
+
+### Delete brand
+DELETE http://localhost:8080/api/v1/catalogue/brands/{{createBrand.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### List manufacturers
+GET http://localhost:8080/api/v1/catalogue/manufacturers?page=0&size=20&sort=name,asc
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Get manufacturer
+# @prompt catalogueManufacturerLookupId Existing catalogue manufacturer id
+GET http://localhost:8080/api/v1/catalogue/manufacturers/{{catalogueManufacturerLookupId}}
+Authorization: Bearer {{catalogueReadToken.response.body.$.access_token}}
+
+### Create manufacturer
+# @name createManufacturer
+POST http://localhost:8080/api/v1/catalogue/manufacturers
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Local Test Manufacturer",
+  "slug": "local-test-manufacturer",
+  "active": true
+}
+
+### Replace manufacturer
+PUT http://localhost:8080/api/v1/catalogue/manufacturers/{{createManufacturer.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Local Test Manufacturer Updated",
+  "slug": "local-test-manufacturer",
+  "active": true
+}
+
+### Patch manufacturer
+PATCH http://localhost:8080/api/v1/catalogue/manufacturers/{{createManufacturer.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/merge-patch+json
+
+{
+  "name": "Local Test Manufacturer Patched"
+}
+
+### Delete manufacturer
+DELETE http://localhost:8080/api/v1/catalogue/manufacturers/{{createManufacturer.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Create product
+# @name createProduct
+# @prompt catalogueBrandId Existing catalogue brand id
+# @prompt catalogueManufacturerId Existing catalogue manufacturer id
+POST http://localhost:8080/api/v1/products
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "title": "Local Test Storage Drive",
+  "slug": "local-test-storage-drive",
+  "family": "STORAGE",
+  "brandId": {{catalogueBrandId}},
+  "manufacturerId": {{catalogueManufacturerId}},
+  "mainImageUrl": "https://example.test/local-test-storage-drive.png",
+  "shortDescription": "Safe local catalogue write example",
+  "identifiers": [
+    {
+      "family": "UPC",
+      "value": "036000291452",
+      "primary": true
+    }
+  ],
+  "active": true
+}
+
+### Replace product
+# @prompt catalogueBrandId Existing catalogue brand id
+# @prompt catalogueManufacturerId Existing catalogue manufacturer id
+PUT http://localhost:8080/api/v1/products/{{createProduct.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+
+{
+  "title": "Local Test Storage Drive Updated",
+  "slug": "local-test-storage-drive",
+  "family": "STORAGE",
+  "brandId": {{catalogueBrandId}},
+  "manufacturerId": {{catalogueManufacturerId}},
+  "mainImageUrl": "https://example.test/local-test-storage-drive-updated.png",
+  "shortDescription": "Updated safe local catalogue write example",
+  "identifiers": [
+    {
+      "family": "GTIN-14",
+      "value": "00036000291452",
+      "primary": true
+    }
+  ],
+  "active": true
+}
+
+### Patch product
+PATCH http://localhost:8080/api/v1/products/{{createProduct.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/merge-patch+json
+
+{
+  "shortDescription": null,
+  "identifiers": [
+    {
+      "family": "ISBN",
+      "value": "9780306406157",
+      "primary": true
+    }
+  ],
+  "active": true
+}
+
+### Invalid product identifier checksum
+# @prompt catalogueBrandId Existing catalogue brand id
+# @prompt catalogueManufacturerId Existing catalogue manufacturer id
+POST http://localhost:8080/api/v1/products
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "title": "Local Test Invalid Identifier",
+  "slug": "local-test-invalid-identifier",
+  "family": "STORAGE",
+  "brandId": {{catalogueBrandId}},
+  "manufacturerId": {{catalogueManufacturerId}},
+  "identifiers": [
+    {
+      "family": "UPC",
+      "value": "036000291453",
+      "primary": true
+    }
+  ],
+  "active": true
+}
+
+### Activate product
+POST http://localhost:8080/api/v1/products/{{createProduct.response.body.$.id}}/activate
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Deactivate product
+POST http://localhost:8080/api/v1/products/{{createProduct.response.body.$.id}}/deactivate
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Assign product category
+POST http://localhost:8080/api/v1/products/{{createProduct.response.body.$.id}}/categories/1
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Remove product category
+DELETE http://localhost:8080/api/v1/products/{{createProduct.response.body.$.id}}/categories/1
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Delete product
+DELETE http://localhost:8080/api/v1/products/{{createProduct.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Create category
+# @name createCategory
+POST http://localhost:8080/api/v1/catalogue/categories
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "parentId": null,
+  "targetIndex": 0,
+  "name": "Local Test Category",
+  "slug": "local-test-category",
+  "active": true
+}
+
+### Create public catalogue category before a sibling
+# @prompt catalogueParentCategoryId Existing parent category id
+# @prompt beforeCatalogueCategoryId Existing sibling id
+POST http://localhost:8080/api/v1/catalogue/categories
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "parentId": {{catalogueParentCategoryId}},
+  "beforeId": {{beforeCatalogueCategoryId}},
+  "name": "Local Ranked Category",
+  "slug": "local-ranked-category",
+  "active": true
+}
+
+### Replace category
+PUT http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "parentId": null,
+  "name": "Local Test Category Updated",
+  "slug": "local-test-category",
+  "active": true
+}
+
+### Patch category
+PATCH http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/merge-patch+json
+
+{
+  "name": "Local Test Category Patched",
+  "parentId": null
+}
+
+### Move category to parent
+# @prompt catalogueParentCategoryId Existing parent category id
+POST http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}/move
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "newParentId": {{catalogueParentCategoryId}},
+  "targetIndex": 0
+}
+
+### Move category to root
+POST http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}/move
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "newParentId": null
+}
+
+### Reorder category within current sibling group
+# @prompt afterCatalogueCategoryId Existing sibling id
+POST http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}/reorder
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "afterId": {{afterCatalogueCategoryId}}
+}
+
+### Reject invalid public category placement
+# Expected: 400, message key catalogue.api.category.placement.conflict.
+# @prompt beforeCatalogueCategoryId Existing sibling id
+# @prompt afterCatalogueCategoryId Existing sibling id
+POST http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}/reorder
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "beforeId": {{beforeCatalogueCategoryId}},
+  "afterId": {{afterCatalogueCategoryId}}
+}
+
+### Activate category
+POST http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}/activate
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Deactivate category
+POST http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}/deactivate
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Delete category
+DELETE http://localhost:8080/api/v1/catalogue/categories/{{createCategory.response.body.$.id}}
+Authorization: Bearer {{catalogueWriteToken.response.body.$.access_token}}
+
+### Disabled-ranking contract note
+# Do not run this against production catalogue categories; production catalogue categories are ranked.
+# Disabled ranking is covered by the unranked fixture/service tests. A disabled system rejects
+# beforeId, afterId, and targetIndex with HTTP 400 and message keys:
+# catalogue.api.category.ranking.disabled.before-id,
+# catalogue.api.category.ranking.disabled.after-id,
+# catalogue.api.category.ranking.disabled.target-index.
+# Clients must use GET /api/v1/catalogue/categories/capabilities as the ranking discovery signal,
+# not ordinary category response fields or failed write attempts.

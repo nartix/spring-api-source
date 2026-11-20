@@ -1,0 +1,5 @@
+databaseChangeLog:
+  # Audit Module - immutable security-sensitive history
+  - includeAll:
+      path: changes/session_audit
+      relativeToChangelogFile: true

@@ -1,0 +1,264 @@
+@host = http://localhost:8080
+@systemKey = catalogue
+
+### Generic admin category protected-call token
+# @prompt adminCategoryReadToken Access token with admin:{{systemKey}}-categories:read
+# @prompt adminCategoryWriteToken Access token with admin:{{systemKey}}-categories:write
+
+### Generic admin category-system authorization notes
+# Declared operations use the exact permission published by the selected registration.
+# Standard registrations publish admin:{{systemKey}}-categories:read for reads and
+# admin:{{systemKey}}-categories:write for writes. A known unsupported operation still
+# requires that route's standard read/write permission before returning 409.
+# ROLE_ADMIN and the legacy admin:categories:* permissions do not authorize generic routes.
+# systemKey is trimmed but never lowercased. Unknown or malformed keys return 404 only
+# after the caller passes the standard preliminary permission check.
+
+### List categories for a category system
+# Omitted parentId returns the flat all-category page. Response envelope includes data, page,
+# sort, and links; items include depth and hasChildren.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?page=0&size=20&sort=updatedAt,desc&sort=id,asc
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### List root categories for a category system
+# parentId=0 is an API-only root sentinel. Stored category parent_id remains null.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?parentId=0&page=0&size=20&sort=sortRank,asc&sort=id,asc
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### List direct child categories for a category system
+# Positive parentId returns direct children only, never grandchildren or nested children.
+# @prompt adminParentCategoryId Existing category parent id for the selected system
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?parentId={{adminParentCategoryId}}&page=0&size=20&sort=sortRank,asc&sort=id,asc
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### List category-system categories with filters
+# active filters by Boolean state; q is a trimmed case-insensitive literal contains match
+# across name and slug; slug is an exact trimmed slug match. hasChildren ignores filters.
+# @prompt adminParentCategoryId Existing category parent id for the selected system
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?parentId={{adminParentCategoryId}}&active=true&q=gpu&slug=gpu-storage&page=0&size=20&sort=name,asc&sort=id,asc
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Get category-system capabilities
+# This provider-free response is projected only from the immutable selected registration.
+# The first four compatibility fields remain unchanged. Additive fields describe supported
+# operations, hierarchy, limits, lifecycle, identifier profile, fields/query sets, and ordering.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/capabilities
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### List category-system categories as a bounded tree
+# Response envelope includes data, page, sort, and links. Large trees fail with
+# 409, code CATEGORY_TREE_TOO_LARGE.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/tree
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### List category-system tree sorted by name
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/tree?sort=name,asc
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### List category-system parent options
+# Bounded no-total-count response: data, hasMore, and nullable nextCursor.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/parent-options?limit=25
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Search and hydrate category-system parent options
+# includeIds is repeated; excludeSubtreeId omits that category and descendants.
+# @prompt selectedParentCategoryId Existing selected parent category id
+# @prompt editedCategoryId Existing category id whose subtree should be omitted
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/parent-options?q=components&includeIds={{selectedParentCategoryId}}&excludeSubtreeId={{editedCategoryId}}&includeInactive=true
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Continue category-system parent options with cursor
+# @prompt parentOptionsNextCursor nextCursor returned by a previous same-context response
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/parent-options?q=components&cursor={{parentOptionsNextCursor}}
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Get one category from a category system
+# @prompt adminCategoryId Existing category id for the selected system
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Get category-system breadcrumb
+# @prompt adminCategoryId Existing category id for the selected system
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}/breadcrumb
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Create category in a category system
+# Ranked systems accept one optional placement field: beforeId, afterId, or targetIndex.
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{
+  "parentId": null,
+  "targetIndex": 0,
+  "name": "Storage",
+  "slug": "storage",
+  "active": true
+}
+
+### Replace category in a category system
+# @prompt adminCategoryId Existing category id for the selected system
+PUT {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{
+  "parentId": null,
+  "name": "Storage",
+  "slug": "storage",
+  "active": true
+}
+
+### Patch category in a category system
+# @prompt adminCategoryId Existing category id for the selected system
+PATCH {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/merge-patch+json
+
+{
+  "name": "Storage",
+  "active": true
+}
+
+### Move category in a category system
+# @prompt adminCategoryId Existing category id for the selected system
+# @prompt destinationParentCategoryId Existing destination parent id, or leave null in the body for root
+# @prompt beforeSiblingCategoryId Existing sibling id in the destination group
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}/move
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{
+  "newParentId": {{destinationParentCategoryId}},
+  "beforeId": {{beforeSiblingCategoryId}}
+}
+
+### Reorder category in a category system
+# @prompt adminCategoryId Existing category id for the selected system
+# @prompt afterSiblingCategoryId Existing sibling id in the current group
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}/reorder
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{
+  "parentId": null,
+  "afterId": {{afterSiblingCategoryId}}
+}
+
+### Activate category in a category system
+# @prompt adminCategoryId Existing category id for the selected system
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}/activate
+Authorization: Bearer {{adminCategoryWriteToken}}
+
+### Deactivate category in a category system
+# @prompt adminCategoryId Existing category id for the selected system
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}/deactivate
+Authorization: Bearer {{adminCategoryWriteToken}}
+
+### Delete category in a category system
+# @prompt adminCategoryId Existing category id for the selected system
+DELETE {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}
+Authorization: Bearer {{adminCategoryWriteToken}}
+
+### Reject invalid category-system parent-options cursor
+# Expected: 400, code CATEGORY_PARENT_OPTIONS_CURSOR_INVALID.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/parent-options?cursor=not-base64
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Category-system tree too large
+# Expected when selected-system total nodes exceed the configured max tree read nodes:
+# 409, code CATEGORY_TREE_TOO_LARGE.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/tree?size=1
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### List categories with literal wildcard-like search text
+# The %, _, and \ characters are ordinary q search text, not user-controlled SQL wildcards.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?q=100%25_%5C&page=0&size=20
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Missing or unreadable selected system
+# Expected for authorized callers: 404, code UNKNOWN_CATEGORY_SYSTEM.
+GET {{host}}/api/v1/admin/category-systems/unknown/categories?page=0&size=20
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Known unsupported read operation with preliminary permission
+# Use a registered test/development system that intentionally omits tree.
+# Without its standard read permission the result is 403. With the permission, the result is
+# 409 CATEGORY_CAPABILITY_UNSUPPORTED before page/sort/cursor or provider validation.
+# @prompt restrictedSystemKey Registered system that does not declare tree
+GET {{host}}/api/v1/admin/category-systems/{{restrictedSystemKey}}/categories/tree?size=0&sort=invalid
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Known unsupported write operation with preliminary permission
+# Use a registered test/development system that intentionally omits create.
+# With the standard write permission, the invalid body still loses to the capability gate:
+# 409 CATEGORY_CAPABILITY_UNSUPPORTED. The response exposes only operation and system key.
+POST {{host}}/api/v1/admin/category-systems/{{restrictedSystemKey}}/categories
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{}
+
+### Missing or unreadable parent in selected system
+# Expected for authorized callers: 404, code CATEGORY_PARENT_NOT_FOUND.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?parentId=999999999&page=0&size=20
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Reject invalid parentId
+# Expected: 400, code VALIDATION_FAILED.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?parentId=-1
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Reject invalid slug filter
+# Expected: 400, code VALIDATION_FAILED.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?slug=Bad%20Slug
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Reject invalid sort
+# Expected: 400, code INVALID_SORT_FIELD.
+GET {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories?sort=productCount,asc
+Authorization: Bearer {{adminCategoryReadToken}}
+
+### Reject duplicate category slug
+# Expected: 409, code DUPLICATE_CATEGORY_SLUG. Response must not expose SQL or table names.
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{
+  "parentId": null,
+  "name": "Duplicate",
+  "slug": "existing-slug",
+  "active": true
+}
+
+### Reject blocked category delete
+# Expected: 409, code CATEGORY_DELETE_BLOCKED for children, assignments, or selected-system policy.
+# @prompt blockedCategoryId Category id blocked by children, assignments, or policy
+DELETE {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{blockedCategoryId}}
+Authorization: Bearer {{adminCategoryWriteToken}}
+
+### Reject invalid category move
+# Expected: 400, code INVALID_CATEGORY_MOVE for self-parenting, descendant parenting, or cycles.
+# @prompt adminCategoryId Existing category id for the selected system
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories/{{adminCategoryId}}/move
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{
+  "newParentId": {{adminCategoryId}}
+}
+
+### Reject invalid placement target
+# Expected: 400, code INVALID_CATEGORY_PLACEMENT_TARGET.
+POST {{host}}/api/v1/admin/category-systems/{{systemKey}}/categories
+Authorization: Bearer {{adminCategoryWriteToken}}
+Content-Type: application/json
+
+{
+  "beforeId": 10,
+  "afterId": 11,
+  "name": "Invalid placement",
+  "slug": "invalid-placement",
+  "active": true
+}

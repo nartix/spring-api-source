@@ -1,0 +1,33 @@
+databaseChangeLog:
+  # IAM Module - Identity and Access Management
+  # Includes: Users, Roles, Permissions, and their associations
+
+  # User management
+  - includeAll:
+      path: changes/user
+      relativeToChangelogFile: true
+
+  # Role management
+  - includeAll:
+      path: changes/role
+      relativeToChangelogFile: true
+
+  # Permission management
+  - includeAll:
+      path: changes/permission
+      relativeToChangelogFile: true
+
+  # User-Role associations
+  - includeAll:
+      path: changes/user_role
+      relativeToChangelogFile: true
+
+  # User-Permission associations
+  - includeAll:
+      path: changes/user_permission
+      relativeToChangelogFile: true
+
+  # Role-Permission associations
+  - includeAll:
+      path: changes/role_permission
+      relativeToChangelogFile: true

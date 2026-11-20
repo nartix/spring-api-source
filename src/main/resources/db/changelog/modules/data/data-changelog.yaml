@@ -1,0 +1,12 @@
+databaseChangeLog:
+  # Data Module - Application business data
+
+  # Category hierarchy
+  - includeAll:
+      path: changes/category
+      relativeToChangelogFile: true
+
+  # Category closure table
+  - includeAll:
+      path: changes/category_closure
+      relativeToChangelogFile: true

@@ -1,0 +1,61 @@
+@host = http://localhost:8080
+@nextjsClientId = uniapi-nextjs
+@nextjsServerClientId = uniapi-nextjs-server
+@nextjsRedirectUri = http://localhost:3000/api/auth/callback/uniapi
+
+### Get Next.js server access token
+# @name serverToken
+# @prompt nextjsServerClientSecret Next.js server client secret
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&scope=api users:read users:write categories:read categories:write catalogue:read catalogue:write
+
+### Exchange authorization code for user tokens
+# @name userToken
+# @prompt nextjsClientSecret Next.js OIDC client secret
+# @prompt authorizationCode Authorization code from callback URL
+# @prompt pkceCodeVerifier PKCE code verifier used for the authorization request
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsClientId}} {{nextjsClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code={{authorizationCode}}&redirect_uri={{nextjsRedirectUri}}&code_verifier={{pkceCodeVerifier}}
+
+### Refresh user access token
+# @name refreshedUserToken
+# @prompt nextjsClientSecret Next.js OIDC client secret
+# @prompt refreshToken Refresh token
+POST {{host}}/oauth2/token
+Authorization: Basic {{nextjsClientId}} {{nextjsClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token={{refreshToken}}
+
+### Introspect an access token owned by this client
+# @prompt nextjsServerClientSecret Next.js server client secret
+# @prompt accessToken Access token issued to this server client
+POST {{host}}/oauth2/introspect
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+token={{accessToken}}&token_type_hint=access_token
+
+### Revoke only the test token issued to this client
+# @prompt nextjsServerClientSecret Next.js server client secret
+# @prompt accessToken Access token issued to this server client
+POST {{host}}/oauth2/revoke
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+token={{accessToken}}&token_type_hint=access_token
+
+### Confirm that the revoked token is inactive
+# @prompt nextjsServerClientSecret Next.js server client secret
+# @prompt accessToken The token just revoked
+POST {{host}}/oauth2/introspect
+Authorization: Basic {{nextjsServerClientId}} {{nextjsServerClientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+token={{accessToken}}&token_type_hint=access_token

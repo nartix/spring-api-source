@@ -1,0 +1,43 @@
+spring:
+  main:
+    banner-mode: "off"
+
+logging:
+  level:
+    root: WARN
+    "[org.springframework]": WARN
+    "[com.ferozfaiz]": WARN
+
+uniapi:
+  category-systems:
+    unranked-test-fixture:
+      owning-module: test
+      node-table: test_unranked_category
+      closure-table: test_unranked_category_closure
+      ranking:
+        enabled: false
+        disabled-request-policy: REJECT
+        placement-modes:
+          - APPEND
+        sort-rank-exposed: false
+      fallback-order:
+        - property: name
+          column-name: name
+          direction: ASC
+        - property: id
+          column-name: id
+          direction: ASC
+
+app:
+  security:
+    session:
+      secure: false
+      audit-hmac-secret: local-test-session-audit-hmac-secret
+    oauth2:
+      signing:
+        allow-generated-key: true
+      clients:
+        nextjs:
+          client-secret: local-test-nextjs-client-secret
+        nextjs-server:
+          client-secret: local-test-nextjs-server-client-secret
